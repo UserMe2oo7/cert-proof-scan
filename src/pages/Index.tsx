@@ -2,11 +2,10 @@ import { useState } from "react";
 import Header from "@/components/Header";
 import UploadArea from "@/components/UploadArea";
 import ValidationResult from "@/components/ValidationResult";
-import AdminDashboard from "@/components/AdminDashboard";
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const [currentView, setCurrentView] = useState<"upload" | "result" | "admin">("upload");
   const [validationResult, setValidationResult] = useState<any>(null);
   const { toast } = useToast();
 
@@ -44,7 +43,6 @@ const Index = () => {
       };
 
       setValidationResult(mockResult);
-      setCurrentView("result");
 
       toast({
         title: "Validation Complete",
@@ -53,94 +51,40 @@ const Index = () => {
     }, 2000);
   };
 
-  const renderContent = () => {
-    switch (currentView) {
-      case "upload":
-        return (
-          <div className="max-w-2xl mx-auto space-y-8">
-            <div className="text-center space-y-4">
-              <h1 className="text-4xl font-bold text-foreground">
-                Educational Certificate Validation
-              </h1>
-              <p className="text-lg text-muted-foreground">
-                Secure, blockchain-anchored certificate verification system
-              </p>
-            </div>
-            <UploadArea onFileSelect={handleFileSelect} />
-            
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                For demonstration purposes, upload any file. Use filenames containing:
-              </p>
-              <div className="flex justify-center space-x-6 text-xs">
-                <span className="text-valid">• "valid" or "john" → Valid result</span>
-                <span className="text-suspicious">• "suspicious" or "test" → Suspicious result</span>
-                <span className="text-invalid">• "fake" or "invalid" → Invalid result</span>
-              </div>
-            </div>
-          </div>
-        );
-
-      case "result":
-        return (
-          <div className="max-w-4xl mx-auto">
-            <ValidationResult {...validationResult} />
-          </div>
-        );
-
-      case "admin":
-        return (
-          <div className="max-w-6xl mx-auto">
-            <div className="mb-6">
-              <h1 className="text-3xl font-bold text-foreground">Admin Dashboard</h1>
-              <p className="text-muted-foreground">Monitor and manage certificate verifications</p>
-            </div>
-            <AdminDashboard />
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      
-      {/* Navigation */}
-      <div className="border-b bg-card">
-        <div className="container mx-auto px-6">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => setCurrentView("upload")}
-              className={`py-4 px-2 border-b-2 transition-colors ${
-                currentView === "upload"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Verify Certificate
-            </button>
-            <button
-              onClick={() => setCurrentView("admin")}
-              className={`py-4 px-2 border-b-2 transition-colors ${
-                currentView === "admin"
-                  ? "border-primary text-primary"
-                  : "border-transparent text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              Admin Dashboard
-            </button>
-          </nav>
-        </div>
+    <ProtectedRoute>
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary/10">
+        <Header />
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold text-primary">
+              EduAuth Certificate Validator
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              Upload educational certificates for instant verification against our secure database. 
+              Our system uses advanced OCR technology and blockchain-anchored validation.
+            </p>
+          </div>
+          
+          <UploadArea onFileSelect={handleFileSelect} />
+          
+          {validationResult && (
+            <ValidationResult {...validationResult} />
+          )}
+          
+          <div className="text-center">
+            <p className="text-sm text-muted-foreground mb-4">
+              For demonstration purposes, upload any file. Use filenames containing:
+            </p>
+            <div className="flex justify-center space-x-6 text-xs">
+              <span className="text-valid">• "valid" or "john" → Valid result</span>
+              <span className="text-suspicious">• "suspicious" or "test" → Suspicious result</span>
+              <span className="text-invalid">• "fake" or "invalid" → Invalid result</span>
+            </div>
+          </div>
+        </main>
       </div>
-
-      {/* Main Content */}
-      <main className="container mx-auto px-6 py-8">
-        {renderContent()}
-      </main>
-    </div>
+    </ProtectedRoute>
   );
 };
 
