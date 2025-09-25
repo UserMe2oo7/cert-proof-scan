@@ -24,6 +24,7 @@ const UploadArea = ({ onFileSelect }: UploadAreaProps) => {
     setDragOver(false);
     const files = Array.from(e.dataTransfer.files);
     if (files[0]) {
+      console.log('File dropped:', files[0].name, files[0].type, files[0].size);
       onFileSelect(files[0]);
     }
   };
@@ -31,7 +32,10 @@ const UploadArea = ({ onFileSelect }: UploadAreaProps) => {
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
     if (files[0]) {
+      console.log('File selected:', files[0].name, files[0].type, files[0].size);
       onFileSelect(files[0]);
+      // Reset the input to allow selecting the same file again
+      e.target.value = '';
     }
   };
 
@@ -74,14 +78,15 @@ const UploadArea = ({ onFileSelect }: UploadAreaProps) => {
           <div>
             <input
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg"
+              accept=".pdf,.png,.jpg,.jpeg,.docx,.doc"
               onChange={handleFileInput}
               className="hidden"
               id="file-upload"
+              multiple={false}
             />
             <label htmlFor="file-upload">
-              <Button variant="hero" className="cursor-pointer">
-                Choose File
+              <Button asChild variant="default" size="lg" className="cursor-pointer bg-gradient-primary hover:shadow-glow transition-all duration-300">
+                <span>Choose File</span>
               </Button>
             </label>
           </div>
