@@ -7,11 +7,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Mail, Lock, User, Shield } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/context/AuthContext';
 
 export const AuthForm = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { login, signup } = useAuth();
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -22,17 +24,12 @@ export const AuthForm = () => {
     const password = formData.get('password') as string;
 
     try {
-      // TODO: Replace with Supabase login when connected
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful login for demo
-      if (email && password) {
-        navigate('/');
-        toast({
-          title: "Login successful",
-          description: "Welcome to EduAuth Validator",
-        });
-      }
+      await login(email, password);
+      navigate('/');
+      toast({
+        title: "Login successful",
+        description: "Welcome to EduAuth Validator",
+      });
     } catch (error) {
       toast({
         title: "Login failed",
@@ -54,17 +51,12 @@ export const AuthForm = () => {
     const fullName = formData.get('fullName') as string;
 
     try {
-      // TODO: Replace with Supabase signup when connected
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Mock successful signup for demo
-      if (email && password && fullName) {
-        navigate('/');
-        toast({
-          title: "Account created successfully",
-          description: "Welcome to EduAuth Validator",
-        });
-      }
+      await signup(email, password, fullName);
+      navigate('/');
+      toast({
+        title: "Account created successfully",
+        description: "Welcome to EduAuth Validator",
+      });
     } catch (error) {
       toast({
         title: "Signup failed",
