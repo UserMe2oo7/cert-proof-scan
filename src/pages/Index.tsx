@@ -4,41 +4,74 @@ import UploadArea from "@/components/UploadArea";
 import ValidationResult from "@/components/ValidationResult";
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { useToast } from "@/hooks/use-toast";
+import { extractTextFromImage, extractCertificateDetails } from "@/lib/ocr";
 
 const Index = () => {
   const [validationResult, setValidationResult] = useState<any>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
-  const handleFileSelect = (file: File) => {
-    // Mock file processing
+  const handleFileSelect = async (file: File) => {
+    setIsProcessing(true);
+    setValidationResult(null);
+    
     toast({
       title: "Processing Certificate",
-      description: "Extracting details and validating against database...",
+      description: "Extracting text using OCR technology...",
     });
 
-    // Simulate processing delay
-    setTimeout(() => {
-      // Mock validation result based on file name
-      const fileName = file.name.toLowerCase();
+    try {
+      // Check if file is an image
+      const isImage = file.type.startsWith('image/');
+      
+      if (!isImage) {
+        throw new Error('Please upload an image file (PNG, JPG, JPEG)');
+      }
+
+      // Extract text using OCR
+      const extractedText = await extractTextFromImage(file);
+      console.log('Extracted text:', extractedText);
+      
+      if (!extractedText || extractedText.trim().length === 0) {
+        throw new Error('No text could be extracted from the image');
+      }
+
+      // Extract certificate details
+      const details = extractCertificateDetails(extractedText);
+      console.log('Extracted details:', details);
+      
+      toast({
+        title: "Text Extracted",
+        description: "Validating certificate details against database...",
+      });
+
+      // Simulate database validation (replace with real DB check later)
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      // Mock validation logic based on extracted data
       let status: "valid" | "suspicious" | "invalid" = "valid";
       
-      if (fileName.includes("fake") || fileName.includes("invalid")) {
-        status = "invalid";
-      } else if (fileName.includes("suspicious") || fileName.includes("test")) {
+      if (!details.studentName || !details.certificateNumber) {
         status = "suspicious";
+      }
+      
+      if (extractedText.toLowerCase().includes('fake') || 
+          extractedText.toLowerCase().includes('sample')) {
+        status = "invalid";
       }
 
       const mockResult = {
         status,
         details: {
-          studentName: status === "invalid" ? "Unknown User" : "John Doe",
-          rollNumber: status === "invalid" ? "N/A" : "CS2023001",
-          dateOfBirth: status === "invalid" ? "N/A" : "1999-05-15",
-          certificateNumber: status === "invalid" ? "FAKE-001" : "CERT-2023-001",
-          course: status === "invalid" ? "N/A" : "Computer Science",
-          year: status === "invalid" ? "N/A" : "2023",
+          studentName: details.studentName || "John Doe",
+          rollNumber: details.rollNumber || "CS2023001",
+          dateOfBirth: details.dateOfBirth || "1999-05-15",
+          certificateNumber: details.certificateNumber || "CERT-2023-001",
+          course: details.course || "Computer Science",
+          year: details.year || "2023",
         },
-        hash: "a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6",
+        extractedText: extractedText.substring(0, 500) + (extractedText.length > 500 ? '...' : ''),
+        hash: await generateFileHash(file),
         timestamp: new Date().toLocaleString(),
       };
 
@@ -48,7 +81,25 @@ const Index = () => {
         title: "Validation Complete",
         description: `Certificate status: ${status.charAt(0).toUpperCase() + status.slice(1)}`,
       });
-    }, 2000);
+      
+    } catch (error) {
+      console.error('Error processing certificate:', error);
+      toast({
+        title: "Processing Failed",
+        description: error instanceof Error ? error.message : "Failed to process certificate",
+        variant: "destructive"
+      });
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Generate SHA-256 hash of the file
+  const generateFileHash = async (file: File): Promise<string> => {
+    const arrayBuffer = await file.arrayBuffer();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', arrayBuffer);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   };
 
   return (
@@ -66,7 +117,7 @@ const Index = () => {
             </p>
           </div>
           
-          <UploadArea onFileSelect={handleFileSelect} />
+          <UploadArea onFileSelect={handleFileSelect} isProcessing={isProcessing} />
           
           {validationResult && (
             <ValidationResult {...validationResult} />

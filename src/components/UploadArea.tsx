@@ -5,9 +5,10 @@ import { Card } from "@/components/ui/card";
 
 interface UploadAreaProps {
   onFileSelect: (file: File) => void;
+  isProcessing?: boolean;
 }
 
-const UploadArea = ({ onFileSelect }: UploadAreaProps) => {
+const UploadArea = ({ onFileSelect, isProcessing = false }: UploadAreaProps) => {
   const [dragOver, setDragOver] = useState(false);
 
   const handleDragOver = (e: React.DragEvent) => {
@@ -65,10 +66,6 @@ const UploadArea = ({ onFileSelect }: UploadAreaProps) => {
             </p>
             <div className="flex items-center justify-center space-x-4 text-sm text-muted-foreground">
               <div className="flex items-center space-x-1">
-                <FileText className="h-4 w-4" />
-                <span>PDF</span>
-              </div>
-              <div className="flex items-center space-x-1">
                 <FileImage className="h-4 w-4" />
                 <span>PNG/JPEG</span>
               </div>
@@ -78,15 +75,22 @@ const UploadArea = ({ onFileSelect }: UploadAreaProps) => {
           <div>
             <input
               type="file"
-              accept=".pdf,.png,.jpg,.jpeg,.docx,.doc"
+              accept=".png,.jpg,.jpeg"
               onChange={handleFileInput}
               className="hidden"
               id="file-upload"
               multiple={false}
+              disabled={isProcessing}
             />
             <label htmlFor="file-upload">
-              <Button asChild variant="default" size="lg" className="cursor-pointer bg-gradient-primary hover:shadow-glow transition-all duration-300">
-                <span>Choose File</span>
+              <Button 
+                asChild 
+                variant="default" 
+                size="lg" 
+                className="cursor-pointer bg-gradient-primary hover:shadow-glow transition-all duration-300"
+                disabled={isProcessing}
+              >
+                <span>{isProcessing ? "Processing..." : "Choose File"}</span>
               </Button>
             </label>
           </div>
